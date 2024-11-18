@@ -104,9 +104,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-advent = { path = "../advent" }
-parse = { path = "../parse" }
-combine = "*"
+advent.workspace = true
+parse.workspace = true
+combine.workspace = true
 "#;
 
 const MAIN_RS: &str = r#"
