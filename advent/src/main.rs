@@ -17,6 +17,7 @@ struct CliOptions {
 enum CliCommand {
     NewQuestion(NewQuestionOptions),
     Submit(SubmitOptions),
+    Init(InitOptions),
 }
 
 #[derive(Parser)]
@@ -35,6 +36,12 @@ impl NewQuestionOptions {
                 .ok_or_else(|| anyhow!("day number could not be determined"))?,
         })
     }
+}
+
+#[derive(Parser)]
+struct InitOptions {
+    #[arg(long)]
+    year: u32,
 }
 
 #[derive(Parser)]
@@ -300,11 +307,29 @@ fn submit_answer(name: &str, day: u32, part: u32, dry_run: bool) -> Result<()> {
     Ok(())
 }
 
+fn init(year: u32) -> Result<()> {
+    fs::write("aoc-year", year.to_string())?;
+    fs::remove_dir_all("support")?;
+
+    let exit_status = Command::new("git")
+        .args(["submodule", "add", "https://github.com/bobbobbio/Advent-of-Code-Support", "support"])
+        .status()?;
+    if !exit_status.success() {
+        if let Some(exit_code) = exit_status.code() {
+            bail!("running `git add submodule` failed with non-zero exit code {exit_code}");
+        } else {
+            bail!("running `git add submodule` failed with signal");
+        }
+    }
+    Ok(())
+}
+
 fn main() -> Result<()> {
     let opt = CliOptions::parse();
     match opt.command {
         CliCommand::NewQuestion(opt) => add_new_question(&opt.name, opt.day()?)?,
         CliCommand::Submit(opt) => submit_answer(&opt.name, opt.day()?, opt.part, opt.dry_run)?,
+        CliCommand::Init(opt) => init(opt.year)?,
     }
 
     Ok(())
