@@ -1,0 +1,18 @@
+[package]
+name = "advent"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+advent_macro = { path = "../advent_macro" }
+anyhow = "1.0.93"
+clap = { version = "4.5.20", features = ["derive"] }
+combine = "4.6.7"
+homedir = "0.3.4"
+parse = { path = "../parse" }
+reqwest = { version = "0.12.9", features = ["blocking", "json"] }
+serde = { version = "1.0.215", features = ["derive"] }
+serde_json = "1.0.132"
+toml = "0.8.19"

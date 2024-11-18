@@ -1,0 +1,8 @@
+[workspace]
+members = [
+    "advent",
+    "advent_macro",
+    "parse",
+    "parse_macro",
+]
+resolver = "2"
