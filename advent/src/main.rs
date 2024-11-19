@@ -52,18 +52,18 @@ impl DayMetadata {
     }
 }
 
-const AOC_METADATA_TOML: &str = "aoc-metadata.toml";
+const AOC_TOML: &str = "aoc.toml";
 
 impl DayMetadata {
     fn read(day_path: &Path) -> Result<Self> {
         Ok(toml::de::from_str(&fs::read_to_string(
-            day_path.join(AOC_METADATA_TOML),
+            day_path.join(AOC_TOML),
         )?)?)
     }
 
     fn write(&self, day_path: &Path) -> Result<()> {
         fs::write(
-            day_path.join(AOC_METADATA_TOML),
+            day_path.join(AOC_TOML),
             toml::ser::to_string_pretty(self)?,
         )?;
         Ok(())
@@ -215,7 +215,7 @@ fn get_existing_days(root: &Path) -> Result<BTreeMap<u32, (PathBuf, DayMetadata)
     let mut days = BTreeMap::new();
     for entry in fs::read_dir(root)? {
         let path = entry?.path();
-        if path.join(AOC_METADATA_TOML).exists() {
+        if path.join(AOC_TOML).exists() {
             let metadata = DayMetadata::read(&path)?;
             days.insert(metadata.day, (path, metadata));
         }
