@@ -41,13 +41,13 @@ struct DayMetadata {
 }
 
 impl DayMetadata {
-    fn next_part(&self) -> Option<u32> {
+    fn next_part(&self) -> Result<u32> {
         if !self.part_1_complete {
-            Some(1)
+            Ok(1)
         } else if !self.part_2_complete {
-            Some(2)
+            Ok(2)
         } else {
-            None
+            Err(anyhow!("all parts submitted for day"))
         }
     }
 }
@@ -430,7 +430,11 @@ fn submit_answer(
     let root = find_aoc_root()?;
     let (day, path, metadata) = find_day_to_submit(&root, crate_name, day)?;
     let crate_name = path.file_name().unwrap().to_str().unwrap();
-    let part = part.unwrap_or_else(|| metadata.next_part().unwrap());
+    let part = if let Some(part) = part {
+        part
+    } else {
+        metadata.next_part()?
+    };
 
     println!("submitting output of {crate_name} for day {day} part {part}");
 
