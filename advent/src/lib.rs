@@ -31,7 +31,8 @@ impl<CellT> Row<CellT> {
     }
 
     pub fn to_vec(&self) -> Vec<CellT>
-        where CellT: Clone
+    where
+        CellT: Clone,
     {
         self.iter().cloned().collect()
     }
@@ -161,7 +162,8 @@ impl<'grid, CellT> Column<'grid, CellT> {
     }
 
     pub fn to_vec(&self) -> Vec<CellT>
-        where CellT: Clone
+    where
+        CellT: Clone,
     {
         self.iter().cloned().collect()
     }
@@ -357,7 +359,8 @@ impl<'grid, CellT> ColumnMut<'grid, CellT> {
     }
 
     pub fn to_vec(&self) -> Vec<CellT>
-        where CellT: Clone
+    where
+        CellT: Clone,
     {
         self.iter().cloned().collect()
     }
@@ -578,8 +581,8 @@ impl<CellT: fmt::Display> fmt::Display for Grid<CellT> {
 impl<CellT: parse::HasParser> parse::HasParser for Grid<CellT> {
     #[parse::prelude::into_parser]
     fn parser() -> _ {
-        use parse::prelude::*;
         use combine::error::Commit;
+        use parse::prelude::*;
 
         combine::parser(|input: &mut Input| {
             let position = input.position();
@@ -771,16 +774,28 @@ fn grid_column_iter_mut() {
     let mut grid = Grid::new(vec![vec![0, 1, 2, 3], vec![4, 5, 6, 7], vec![8, 9, 10, 11]]).unwrap();
     let mut columns = grid.columns_mut();
     let mut column0 = columns.next().unwrap();
-    assert_eq!(Vec::from_iter(column0.iter_mut().map(|c| *c)), vec![0, 4, 8]);
+    assert_eq!(
+        Vec::from_iter(column0.iter_mut().map(|c| *c)),
+        vec![0, 4, 8]
+    );
 
     let mut column1 = columns.next().unwrap();
-    assert_eq!(Vec::from_iter(column1.iter_mut().map(|c| *c)), vec![1, 5, 9]);
+    assert_eq!(
+        Vec::from_iter(column1.iter_mut().map(|c| *c)),
+        vec![1, 5, 9]
+    );
 
     let mut column2 = columns.next().unwrap();
-    assert_eq!(Vec::from_iter(column2.iter_mut().map(|c| *c)), vec![2, 6, 10]);
+    assert_eq!(
+        Vec::from_iter(column2.iter_mut().map(|c| *c)),
+        vec![2, 6, 10]
+    );
 
     let mut column3 = columns.next().unwrap();
-    assert_eq!(Vec::from_iter(column3.iter_mut().map(|c| *c)), vec![3, 7, 11]);
+    assert_eq!(
+        Vec::from_iter(column3.iter_mut().map(|c| *c)),
+        vec![3, 7, 11]
+    );
 
     assert!(columns.next().is_none());
 
@@ -824,16 +839,28 @@ fn grid_column_into_iter_mut() {
     let mut grid = Grid::new(vec![vec![0, 1, 2, 3], vec![4, 5, 6, 7], vec![8, 9, 10, 11]]).unwrap();
     let mut columns = grid.columns_mut();
     let column0 = columns.next().unwrap();
-    assert_eq!(Vec::from_iter(column0.into_iter().map(|c| *c)), vec![0, 4, 8]);
+    assert_eq!(
+        Vec::from_iter(column0.into_iter().map(|c| *c)),
+        vec![0, 4, 8]
+    );
 
     let column1 = columns.next().unwrap();
-    assert_eq!(Vec::from_iter(column1.into_iter().map(|c| *c)), vec![1, 5, 9]);
+    assert_eq!(
+        Vec::from_iter(column1.into_iter().map(|c| *c)),
+        vec![1, 5, 9]
+    );
 
     let column2 = columns.next().unwrap();
-    assert_eq!(Vec::from_iter(column2.into_iter().map(|c| *c)), vec![2, 6, 10]);
+    assert_eq!(
+        Vec::from_iter(column2.into_iter().map(|c| *c)),
+        vec![2, 6, 10]
+    );
 
     let column3 = columns.next().unwrap();
-    assert_eq!(Vec::from_iter(column3.into_iter().map(|c| *c)), vec![3, 7, 11]);
+    assert_eq!(
+        Vec::from_iter(column3.into_iter().map(|c| *c)),
+        vec![3, 7, 11]
+    );
 
     assert!(columns.next().is_none());
 

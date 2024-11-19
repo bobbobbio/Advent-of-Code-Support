@@ -236,7 +236,7 @@ fn resolve_day(root: &Path, day: Option<u32>) -> Result<u32> {
     if let Some(day) = day {
         Ok(day)
     } else {
-        Ok(find_next_day(&root)?)
+        Ok(find_next_day(root)?)
     }
 }
 
@@ -277,6 +277,8 @@ fn add_new_day(crate_name: &Option<String>, day: Option<u32>) -> Result<()> {
         part_2_complete: false,
     };
     metadata.write(&path)?;
+
+    println!("Created new day at {} for day {day}", path.display());
 
     Ok(())
 }
@@ -429,6 +431,8 @@ fn submit_answer(
     let (day, path, metadata) = find_day_to_submit(&root, crate_name, day)?;
     let crate_name = path.file_name().unwrap().to_str().unwrap();
     let part = part.unwrap_or_else(|| metadata.next_part().unwrap());
+
+    println!("submitting output of {crate_name} for day {day} part {part}");
 
     let answers = run_program(&root, crate_name)?;
     let result = answers
