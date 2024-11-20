@@ -473,6 +473,7 @@ impl<'grid, CellT> DoubleEndedIterator for ColumnIterMut<'grid, CellT> {
 
 impl<'grid, CellT> ExactSizeIterator for ColumnIterMut<'grid, CellT> {}
 
+/// A simple 2-D array type.
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Grid<CellT>(Vec<Row<CellT>>);
 

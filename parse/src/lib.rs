@@ -22,6 +22,8 @@ pub mod prelude {
     pub use std::str::FromStr;
 }
 
+/// Implementing this trait means this type has the ability to construct a parser which yields
+/// itself on success.
 pub trait HasParser: Sized {
     fn parser<Input>() -> impl Parser<Input, Output = Self>
     where
@@ -118,6 +120,7 @@ impl HasParser for String {
 
 macro_rules! matching_parser {
     ($name:ident, $c:expr) => {
+        /// Parses as `$c`
         #[derive(Debug, Clone, Copy)]
         pub struct $name;
 
@@ -157,15 +160,19 @@ token!(Space, ' ');
 string!(SpaceBar, " |");
 many1_token!(Spaces, ' ');
 
+/// Parse control type which causes collections to parse the given type between elements
 #[derive(Debug, Clone, Copy)]
 pub struct SepBy<T>(PhantomData<T>);
 
+/// Parse control type which causes collections to parse the given type after elements
 #[derive(Debug, Clone, Copy)]
 pub struct TermWith<T>(PhantomData<T>);
 
+/// Parse control type which causes collections to parse the given type before elements
 #[derive(Debug, Clone, Copy)]
 pub struct StartsWith<T>(PhantomData<T>);
 
+/// A vector which implements [`HasParser`] in a way controllable via the second generic parameter.
 #[derive(Clone)]
 pub struct List<T, Sep>(Vec<T>, PhantomData<Sep>);
 
@@ -363,6 +370,7 @@ impl<T, Sep> DerefMut for List<T, Sep> {
     }
 }
 
+/// Parses a type using [`HasParser::parse`]
 pub fn parse_str<T: HasParser>(
     input: &str,
 ) -> std::result::Result<T, easy::Errors<char, &str, position::SourcePosition>> {

@@ -227,6 +227,7 @@ fn derive_has_parser_inner(input: DeriveInput) -> Result<ItemImpl> {
     }
 }
 
+/// Derives the `HasParser` trait for the given type.
 #[proc_macro_derive(HasParser, attributes(parse))]
 pub fn derive_has_parser(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
