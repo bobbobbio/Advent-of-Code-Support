@@ -20,3 +20,14 @@ jobs:
       run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
+    - name: Deploy Documentation
+      run: cargo doc
+    - name: Set up Pages
+      uses: actions/configure-pages@v4
+    - name: Upload Artifact
+      uses: actions/upload-pages-artifact@v2
+      with:
+          path: 'target/doc'
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v1
