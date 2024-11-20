@@ -1,3 +1,8 @@
+#![warn(missing_docs)]
+
+//! This crate contains code that helps with parsing [Advent of Code](https://adventofcode.com)
+//! problems using Rust.
+
 use combine::eof;
 use combine::parser::char::{alpha_num, spaces};
 use combine::stream::{easy, position};
@@ -12,6 +17,11 @@ use std::{
 
 extern crate self as parse;
 
+/// This module can be imported like
+/// ```rust
+/// use parse::prelude::*;
+/// ```
+/// to import a bunch of useful things.
 pub mod prelude {
     pub use super::*;
     pub use combine::parser::char::*;
@@ -25,6 +35,7 @@ pub mod prelude {
 /// Implementing this trait means this type has the ability to construct a parser which yields
 /// itself on success.
 pub trait HasParser: Sized {
+    /// Returns a parser which parses `Self`
     fn parser<Input>() -> impl Parser<Input, Output = Self>
     where
         Input: combine::Stream<Token = char>;
@@ -48,10 +59,14 @@ where
     }
 }
 
+/// Represents the various things that could go wrong when parsing.
 #[derive(Debug)]
 pub enum Error {
+    /// There was an error parsing an integer.
     ParseInt(num::ParseIntError),
+    /// There was some kind of IO error.
     Io(io::Error),
+    /// There was some error combing from a general parser.
     ParseError(String),
 }
 
@@ -79,6 +94,7 @@ impl From<easy::Errors<char, &str, position::SourcePosition>> for Error {
     }
 }
 
+/// `std::result::Result` but the error is [`Error`]
 pub type Result<T> = std::result::Result<T, Error>;
 
 macro_rules! unsigned_number_parser {
@@ -214,9 +230,11 @@ where
 
 impl<T, Sep> Eq for List<T, Sep> where T: Eq {}
 
+/// Parses as nothing
 #[derive(Clone, Debug)]
 pub struct Nil;
 
+/// Parses as anything which isn't `char::is_whitespace`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NotWhitespace(pub String);
 
@@ -275,30 +293,37 @@ impl<T, Sep> Default for List<T, Sep> {
 }
 
 impl<T, Sep> List<T, Sep> {
+    /// Construct an empty list
     pub fn new() -> Self {
         Self(vec![], PhantomData)
     }
 
+    /// Add an element to the end of the list
     pub fn push(&mut self, t: T) {
         self.0.push(t);
     }
 
+    /// Return an iterator over the elements of the list.
     pub fn iter(&self) -> slice::Iter<'_, T> {
         self.0.iter()
     }
 
+    /// Return a mutable iterator over the elements of the list.
     pub fn iter_mut(&mut self) -> slice::IterMut<'_, T> {
         self.0.iter_mut()
     }
 
+    /// Shortens the list keeping the first `size` elements.
     pub fn truncate(&mut self, size: usize) {
         self.0.truncate(size);
     }
 
+    /// Increase the underlying capacity of the list.
     pub fn reserve(&mut self, additional: usize) {
         self.0.reserve(additional)
     }
 
+    /// Remove the last element of the list.
     pub fn pop(&mut self) -> Option<T> {
         self.0.pop()
     }
