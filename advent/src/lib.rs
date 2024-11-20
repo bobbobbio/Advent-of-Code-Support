@@ -1,3 +1,13 @@
+#![warn(missing_docs)]
+
+//! This crate contains code that helps with solving [Advent of Code](https://adventofcode.com)
+//! problems using Rust.
+
+/// This module can be imported like
+/// ```rust
+/// use advent::prelude::*;
+/// ```
+/// to import a bunch of useful things.
 pub mod prelude {
     pub use super::Grid;
     pub use advent_macro::*;
@@ -10,26 +20,32 @@ pub use parse;
 use std::fmt;
 use std::marker::PhantomData;
 
+/// Represents one horizontal row of a [`Grid`]
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Row<CellT>(Vec<CellT>);
 
 impl<CellT> Row<CellT> {
+    /// Returns the number of cells in the row
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
+    /// Returns true if the row contains no cells
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
+    /// Returns an iterator which yields shared references to the cells in the row
     pub fn iter(&self) -> std::slice::Iter<'_, CellT> {
         self.0.iter()
     }
 
+    /// Returns an iterator which yields mutable references to the cells in the row
     pub fn iter_mut(&mut self) -> std::slice::IterMut<'_, CellT> {
         self.0.iter_mut()
     }
 
+    /// Clone the contents of the row and return as a [`Vec`]
     pub fn to_vec(&self) -> Vec<CellT>
     where
         CellT: Clone,
@@ -79,6 +95,7 @@ impl<CellT> std::ops::IndexMut<usize> for Row<CellT> {
     }
 }
 
+#[doc(hidden)]
 pub trait GetColumnCell {
     type Cell: Sized;
 
@@ -101,6 +118,8 @@ impl<'grid, CellT> GetColumnCell for Column<'grid, CellT> {
     }
 }
 
+/// An iterator over the cells of a [`Grid`] that goes from top to bottom. Yields shared
+/// references, if you need mutable references see [`VerticalCellIterMut`].
 pub struct VerticalCellIter<ColumnT> {
     column: ColumnT,
     row_forward: usize,
@@ -139,20 +158,27 @@ impl<ColumnT: GetColumnCell> DoubleEndedIterator for VerticalCellIter<ColumnT> {
 
 impl<ColumnT: GetColumnCell> ExactSizeIterator for VerticalCellIter<ColumnT> {}
 
+/// Represents one column of a [`Grid`].
+///
+/// This type is only able to yield shared references to cells. If you want to mutate a column you
+/// need a [`ColumnMut`] instead
 pub struct Column<'grid, CellT> {
     grid: &'grid Grid<CellT>,
     column: usize,
 }
 
 impl<'grid, CellT> Column<'grid, CellT> {
+    /// Returns the number of cells in this column
     pub fn len(&self) -> usize {
         self.grid.height()
     }
 
+    /// Returns true if the column contains no cells
     pub fn is_empty(&self) -> bool {
         self.grid.is_empty()
     }
 
+    /// Returns an iterator which yields shared references to the cells in the column
     pub fn iter(&self) -> VerticalCellIter<&'_ Self> {
         VerticalCellIter {
             column: self,
@@ -161,6 +187,7 @@ impl<'grid, CellT> Column<'grid, CellT> {
         }
     }
 
+    /// Clone the contents of the column and return as a [`Vec`]
     pub fn to_vec(&self) -> Vec<CellT>
     where
         CellT: Clone,
@@ -199,6 +226,9 @@ impl<'grid, CellT> std::ops::Index<usize> for Column<'grid, CellT> {
     }
 }
 
+/// An iterator that yields the columns of a [`Grid`]
+///
+/// The columns this yields can only yield shared references to cells.
 pub struct ColumnIter<'grid, CellT> {
     grid: &'grid Grid<CellT>,
     column_forward: usize,
@@ -243,6 +273,7 @@ impl<'grid, CellT> DoubleEndedIterator for ColumnIter<'grid, CellT> {
 
 impl<'grid, CellT> ExactSizeIterator for ColumnIter<'grid, CellT> {}
 
+#[doc(hidden)]
 pub trait GetColumnCellMut {
     type Cell: Sized;
 
@@ -281,6 +312,8 @@ impl<'grid, CellT> GetColumnCell for ColumnMut<'grid, CellT> {
     }
 }
 
+/// An iterator over the cells of a [`Grid`] that goes from top to bottom. Yields mutable
+/// references.
 pub struct VerticalCellIterMut<ColumnT> {
     column: ColumnT,
     row_forward: usize,
@@ -319,6 +352,9 @@ impl<ColumnT: GetColumnCellMut> DoubleEndedIterator for VerticalCellIterMut<Colu
 
 impl<ColumnT: GetColumnCellMut> ExactSizeIterator for VerticalCellIterMut<ColumnT> {}
 
+/// Represents one column of a [`Grid`].
+///
+/// This type is able to yield mutable references to cells.
 pub struct ColumnMut<'grid, CellT> {
     grid_ptr: *mut Grid<CellT>,
     grid: PhantomData<&'grid mut Grid<CellT>>,
@@ -334,14 +370,17 @@ impl<'grid, CellT> ColumnMut<'grid, CellT> {
         }
     }
 
+    /// Returns the number of cells in this column
     pub fn len(&self) -> usize {
         unsafe { &*self.grid_ptr }.height()
     }
 
+    /// Returns true if the column contains no cells
     pub fn is_empty(&self) -> bool {
         unsafe { &*self.grid_ptr }.is_empty()
     }
 
+    /// Returns an iterator which yields shared references to the cells in the column
     pub fn iter(&self) -> VerticalCellIter<&'_ Self> {
         VerticalCellIter {
             row_forward: 0,
@@ -350,6 +389,7 @@ impl<'grid, CellT> ColumnMut<'grid, CellT> {
         }
     }
 
+    /// Returns an iterator which yields mutable references to the cells in the column
     pub fn iter_mut(&mut self) -> VerticalCellIterMut<&'_ mut Self> {
         VerticalCellIterMut {
             row_forward: 0,
@@ -358,6 +398,7 @@ impl<'grid, CellT> ColumnMut<'grid, CellT> {
         }
     }
 
+    /// Clone the contents of the column and return as a [`Vec`]
     pub fn to_vec(&self) -> Vec<CellT>
     where
         CellT: Clone,
@@ -419,6 +460,9 @@ impl<'grid, CellT> std::ops::IndexMut<usize> for ColumnMut<'grid, CellT> {
     }
 }
 
+/// An iterator that yields the columns of a [`Grid`]
+///
+/// The columns this yields yield mutable references to cells.
 pub struct ColumnIterMut<'grid, CellT> {
     grid_ptr: *mut Grid<CellT>,
     grid: PhantomData<&'grid mut Grid<CellT>>,
@@ -478,6 +522,8 @@ impl<'grid, CellT> ExactSizeIterator for ColumnIterMut<'grid, CellT> {}
 pub struct Grid<CellT>(Vec<Row<CellT>>);
 
 impl<CellT> Grid<CellT> {
+    /// Create a new Grid from the given 2-D Vec. It returns `None` if the given rows are not all
+    /// the same length. It also returns `None` if any of the rows are empty.
     pub fn new(v: Vec<Vec<CellT>>) -> Option<Self> {
         if !v.is_empty() {
             let first_len = v[0].len();
@@ -492,10 +538,12 @@ impl<CellT> Grid<CellT> {
         Some(Self(v.into_iter().map(|v| Row(v)).collect()))
     }
 
+    /// The height of the grid in number of cells
     pub fn height(&self) -> usize {
         self.0.len()
     }
 
+    /// The width of the grid in number of cells
     pub fn width(&self) -> usize {
         if self.0.is_empty() {
             0
@@ -504,10 +552,14 @@ impl<CellT> Grid<CellT> {
         }
     }
 
+    /// An iterator over the rows in the grid. The rows it yields can only yield shared references
+    /// to cells.
     pub fn rows(&self) -> std::slice::Iter<'_, Row<CellT>> {
         self.0.iter()
     }
 
+    /// An iterator over the columns in the grid. The column it yields can only yield shared
+    /// references to cells.
     pub fn columns(&self) -> ColumnIter<'_, CellT> {
         ColumnIter {
             grid: self,
@@ -516,10 +568,12 @@ impl<CellT> Grid<CellT> {
         }
     }
 
+    /// Get a shared reference to an individual row.
     pub fn row(&self, index: usize) -> &Row<CellT> {
         &self.0[index]
     }
 
+    /// Get an individual column. This column can only yield shared references to cells.
     pub fn column(&self, index: usize) -> Column<'_, CellT> {
         Column {
             grid: self,
@@ -527,22 +581,29 @@ impl<CellT> Grid<CellT> {
         }
     }
 
+    /// An iterator over the rows in the grid. The rows it yields is able to yield mutable
+    /// references to cells.
     pub fn rows_mut(&mut self) -> std::slice::IterMut<'_, Row<CellT>> {
         self.0.iter_mut()
     }
 
+    /// An iterator over the columns in the grid. The column it yields is able to yield mutable
+    /// references to cells.
     pub fn columns_mut(&mut self) -> ColumnIterMut<'_, CellT> {
         ColumnIterMut::new(self)
     }
 
+    /// Get a mutable reference to an individual row.
     pub fn row_mut(&mut self, index: usize) -> &mut Row<CellT> {
         &mut self.0[index]
     }
 
+    /// Get an individual column. This column is able to yield mutable references to cells.
     pub fn column_mut(&mut self, index: usize) -> ColumnMut<'_, CellT> {
         ColumnMut::new(self, index)
     }
 
+    /// Returns true if the grid has no rows.
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
