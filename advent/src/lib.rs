@@ -235,6 +235,16 @@ pub struct ColumnIter<'grid, CellT> {
     column_backward: usize,
 }
 
+impl<'grid, CellT> ColumnIter<'grid, CellT> {
+    fn new(grid: &'grid Grid<CellT>) -> Self {
+        Self {
+            grid,
+            column_forward: 0,
+            column_backward: grid.width(),
+        }
+    }
+}
+
 impl<'grid, CellT> Iterator for ColumnIter<'grid, CellT> {
     type Item = Column<'grid, CellT>;
 
@@ -517,6 +527,113 @@ impl<'grid, CellT> DoubleEndedIterator for ColumnIterMut<'grid, CellT> {
 
 impl<'grid, CellT> ExactSizeIterator for ColumnIterMut<'grid, CellT> {}
 
+/// An iterator that yields mutable references to all cells of a [`Grid`]
+pub struct CellIterMut<'grid, CellT> {
+    grid_ptr: *mut Grid<CellT>,
+    grid: PhantomData<&'grid mut Grid<CellT>>,
+    forward: usize,
+    backward: usize,
+}
+
+impl<'grid, CellT> CellIterMut<'grid, CellT> {
+    fn new(grid: &'grid mut Grid<CellT>) -> Self {
+        Self {
+            grid_ptr: grid,
+            grid: PhantomData,
+            forward: 0,
+            backward: grid.width() * grid.height(),
+        }
+    }
+}
+
+impl<'grid, CellT> Iterator for CellIterMut<'grid, CellT> {
+    type Item = &'grid mut CellT;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.forward < self.backward {
+            let (y, x) = {
+                let grid: &'grid Grid<CellT> = unsafe { &*self.grid_ptr };
+                (self.forward / grid.width(), self.forward % grid.width())
+            };
+            self.forward += 1;
+            Some(&mut unsafe { &mut *self.grid_ptr }.row_mut(y).0[x])
+        } else {
+            None
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.backward - self.forward;
+        (len, Some(len))
+    }
+}
+
+impl<'grid, CellT> DoubleEndedIterator for CellIterMut<'grid, CellT> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.backward == self.forward {
+            None
+        } else {
+            self.backward -= 1;
+            let (y, x) = {
+                let grid: &'grid Grid<CellT> = unsafe { &*self.grid_ptr };
+                (self.forward / grid.width(), self.forward % grid.width())
+            };
+            Some(&mut unsafe { &mut *self.grid_ptr }.row_mut(y).0[x])
+        }
+    }
+}
+
+impl<'grid, CellT> ExactSizeIterator for CellIterMut<'grid, CellT> {}
+
+/// An iterator that yields shared references to all cells of a [`Grid`]
+pub struct CellIter<'grid, CellT> {
+    grid: &'grid Grid<CellT>,
+    forward: usize,
+    backward: usize,
+}
+
+impl<'grid, CellT> CellIter<'grid, CellT> {
+    fn new(grid: &'grid Grid<CellT>) -> Self {
+        Self {
+            grid,
+            forward: 0,
+            backward: grid.width() * grid.height(),
+        }
+    }
+}
+
+impl<'grid, CellT> Iterator for CellIter<'grid, CellT> {
+    type Item = &'grid CellT;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.forward < self.backward {
+            let item = &self.grid[self.forward / self.grid.width()][self.forward % self.grid.width()];
+            self.forward += 1;
+            Some(item)
+        } else {
+            None
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.backward - self.forward;
+        (len, Some(len))
+    }
+}
+
+impl<'grid, CellT> DoubleEndedIterator for CellIter<'grid, CellT> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.backward == self.forward {
+            None
+        } else {
+            self.backward -= 1;
+            Some(&self.grid[self.backward / self.grid.width()][self.backward % self.grid.width()])
+        }
+    }
+}
+
+impl<'grid, CellT> ExactSizeIterator for CellIter<'grid, CellT> {}
+
 /// A simple 2-D array type.
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Grid<CellT>(Vec<Row<CellT>>);
@@ -561,11 +678,7 @@ impl<CellT> Grid<CellT> {
     /// An iterator over the columns in the grid. The column it yields can only yield shared
     /// references to cells.
     pub fn columns(&self) -> ColumnIter<'_, CellT> {
-        ColumnIter {
-            grid: self,
-            column_forward: 0,
-            column_backward: self.width(),
-        }
+        ColumnIter::new(self)
     }
 
     /// Get a shared reference to an individual row.
@@ -606,6 +719,29 @@ impl<CellT> Grid<CellT> {
     /// Returns true if the grid has no rows.
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
+    }
+
+    /// An iterator over all the cells in the Grid which yields shared references.
+    pub fn cells(&self) -> CellIter<'_, CellT> {
+        CellIter::new(self)
+    }
+
+    /// An iterator over all the cells in the Grid which yields mutable references.
+    pub fn cells_mut(&mut self) -> CellIterMut<'_, CellT> {
+        CellIterMut::new(self)
+    }
+
+    /// Find a cell matching the given pattern. Returns index as `Some((row, column))` if found,
+    /// and `None` otherwise.
+    pub fn position(&self, mut pattern: impl FnMut(&CellT) -> bool) -> Option<(usize, usize)> {
+        for r in 0..self.height() {
+            for c in 0..self.width() {
+                if pattern(&self[r][c]) {
+                    return Some((r, c))
+                }
+            }
+        }
+        None
     }
 }
 
@@ -968,6 +1104,27 @@ fn grid_indexing() {
     assert_eq!(grid[0][2], 2);
     assert_eq!(grid[1][2], 6);
     assert_eq!(grid[1][3], 7);
+}
+
+#[test]
+fn grid_cell_iter() {
+    let mut grid = Grid::new(vec![vec![0, 1, 2, 3], vec![4, 5, 6, 7]]).unwrap();
+    assert_eq!(Vec::from_iter(grid.cells().copied()), vec![0, 1, 2, 3, 4, 5, 6, 7]);
+    assert_eq!(Vec::from_iter(grid.cells_mut().map(|c| *c)), vec![0, 1, 2, 3, 4, 5, 6, 7]);
+
+    for c in grid.cells_mut() {
+        *c += 1;
+    }
+    assert_eq!(Vec::from_iter(grid.cells().copied()), vec![1, 2, 3, 4, 5, 6, 7, 8]);
+}
+
+#[test]
+fn grid_position() {
+    let grid = Grid::new(vec![vec![0, 1, 2, 3], vec![4, 5, 6, 7]]).unwrap();
+
+    assert_eq!(grid.position(|c| *c == 3), Some((0, 3)));
+    assert_eq!(grid.position(|c| *c == 5), Some((1, 1)));
+    assert_eq!(grid.position(|c| *c == 12), None);
 }
 
 #[test]
