@@ -607,7 +607,8 @@ impl<'grid, CellT> Iterator for CellIter<'grid, CellT> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.forward < self.backward {
-            let item = &self.grid[self.forward / self.grid.width()][self.forward % self.grid.width()];
+            let item =
+                &self.grid[self.forward / self.grid.width()][self.forward % self.grid.width()];
             self.forward += 1;
             Some(item)
         } else {
@@ -633,6 +634,55 @@ impl<'grid, CellT> DoubleEndedIterator for CellIter<'grid, CellT> {
 }
 
 impl<'grid, CellT> ExactSizeIterator for CellIter<'grid, CellT> {}
+
+/// An iterator that yields indexes of a grid.
+pub struct PositionIter {
+    width: usize,
+    forward: usize,
+    backward: usize,
+}
+
+impl PositionIter {
+    fn new(height: usize, width: usize) -> Self {
+        Self {
+            width,
+            forward: 0,
+            backward: width * height,
+        }
+    }
+}
+
+impl Iterator for PositionIter {
+    type Item = (usize, usize);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.forward < self.backward {
+            let item = (self.forward / self.width, self.forward % self.width);
+            self.forward += 1;
+            Some(item)
+        } else {
+            None
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.backward - self.forward;
+        (len, Some(len))
+    }
+}
+
+impl DoubleEndedIterator for PositionIter {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.backward == self.forward {
+            None
+        } else {
+            self.backward -= 1;
+            Some((self.backward / self.width, self.backward % self.width))
+        }
+    }
+}
+
+impl ExactSizeIterator for PositionIter {}
 
 /// A simple 2-D array type.
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -737,11 +787,16 @@ impl<CellT> Grid<CellT> {
         for r in 0..self.height() {
             for c in 0..self.width() {
                 if pattern(&self[r][c]) {
-                    return Some((r, c))
+                    return Some((r, c));
                 }
             }
         }
         None
+    }
+
+    /// Return iterator over the valid indexes of the Grid. Yields a tuple of `(row, column)`.
+    pub fn positions(&self) -> PositionIter {
+        PositionIter::new(self.height(), self.width())
     }
 }
 
@@ -1109,13 +1164,22 @@ fn grid_indexing() {
 #[test]
 fn grid_cell_iter() {
     let mut grid = Grid::new(vec![vec![0, 1, 2, 3], vec![4, 5, 6, 7]]).unwrap();
-    assert_eq!(Vec::from_iter(grid.cells().copied()), vec![0, 1, 2, 3, 4, 5, 6, 7]);
-    assert_eq!(Vec::from_iter(grid.cells_mut().map(|c| *c)), vec![0, 1, 2, 3, 4, 5, 6, 7]);
+    assert_eq!(
+        Vec::from_iter(grid.cells().copied()),
+        vec![0, 1, 2, 3, 4, 5, 6, 7]
+    );
+    assert_eq!(
+        Vec::from_iter(grid.cells_mut().map(|c| *c)),
+        vec![0, 1, 2, 3, 4, 5, 6, 7]
+    );
 
     for c in grid.cells_mut() {
         *c += 1;
     }
-    assert_eq!(Vec::from_iter(grid.cells().copied()), vec![1, 2, 3, 4, 5, 6, 7, 8]);
+    assert_eq!(
+        Vec::from_iter(grid.cells().copied()),
+        vec![1, 2, 3, 4, 5, 6, 7, 8]
+    );
 }
 
 #[test]
@@ -1125,6 +1189,25 @@ fn grid_position() {
     assert_eq!(grid.position(|c| *c == 3), Some((0, 3)));
     assert_eq!(grid.position(|c| *c == 5), Some((1, 1)));
     assert_eq!(grid.position(|c| *c == 12), None);
+}
+
+#[test]
+fn grid_positions() {
+    let grid = Grid::new(vec![vec![0, 1, 2, 3], vec![4, 5, 6, 7]]).unwrap();
+
+    assert_eq!(
+        Vec::from_iter(grid.positions()),
+        vec![
+            (0, 0),
+            (0, 1),
+            (0, 2),
+            (0, 3),
+            (1, 0),
+            (1, 1),
+            (1, 2),
+            (1, 3)
+        ]
+    );
 }
 
 #[test]
