@@ -313,7 +313,8 @@ impl<T, Sep> List<T, Sep> {
         self.0.iter_mut()
     }
 
-    /// Shortens the list keeping the first `size` elements.
+    /// Shortens the list keeping the first `size` elements. Does nothing if the given size is
+    /// longer than the current length of the list.
     pub fn truncate(&mut self, size: usize) {
         self.0.truncate(size);
     }
@@ -327,12 +328,60 @@ impl<T, Sep> List<T, Sep> {
     pub fn pop(&mut self) -> Option<T> {
         self.0.pop()
     }
+
+    /// Remove the given element of the list. Panics if the given index is out of bounds.
+    pub fn remove(&mut self, index: usize) -> T {
+        self.0.remove(index)
+    }
+
+    /// Keep only the elements specified by the given predicate.
+    pub fn retain<F>(&mut self, f: F)
+    where
+        F: FnMut(&T) -> bool,
+    {
+        self.0.retain(f)
+    }
+
+    /// Keep only the elements specified by the given predicate.
+    pub fn retain_mut<F>(&mut self, f: F)
+    where
+        F: FnMut(&mut T) -> bool,
+    {
+        self.0.retain_mut(f)
+    }
+
+    /// Remove and return the tail of the vector starting at given index. Panics if the given index
+    /// is invalid.
+    pub fn split_off(&mut self, at: usize) -> Self {
+        List(self.0.split_off(at), PhantomData)
+    }
+
+    /// Re-size the list to the new given length. If the new length is longer, the given value is
+    /// used to fill the void.
+    pub fn resize(&mut self, new_len: usize, value: T)
+    where
+        T: Clone,
+    {
+        self.0.resize(new_len, value)
+    }
+
+    /// Delete all the elements of the list.
+    pub fn clear(&mut self) {
+        self.0.clear()
+    }
+
+    /// Insert the given element at the given index. Panics if the given index is invalid.
+    pub fn insert(&mut self, index: usize, element: T) {
+        self.0.insert(index, element)
+    }
 }
 
 impl<A, Sep> std::iter::Extend<A> for List<A, Sep> {
     fn extend<T>(&mut self, iter: T)
-        where T: IntoIterator<Item = A> {
-            self.0.extend(iter)
+    where
+        T: IntoIterator<Item = A>,
+    {
+        self.0.extend(iter)
     }
 }
 
