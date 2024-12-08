@@ -14,6 +14,7 @@ pub mod prelude {
     pub use derive_more::{Debug as DebugMore, Display as DisplayMore};
     pub use parse::prelude::*;
     pub use std::collections::*;
+    pub use strum::{EnumIter, IntoEnumIterator as _};
 }
 pub use combine;
 pub use parse;
