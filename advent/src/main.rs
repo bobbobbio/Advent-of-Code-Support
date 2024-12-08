@@ -133,9 +133,10 @@ edition = "2021"
 
 [dependencies]
 advent.workspace = true
-parse.workspace = true
 combine.workspace = true
 derive_more.workspace = true
+parse.workspace = true
+strum.workspace = true
 "#;
 
 const MAIN_RS: &str = r#"
