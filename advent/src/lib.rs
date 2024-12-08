@@ -11,7 +11,7 @@
 pub mod prelude {
     pub use super::Grid;
     pub use advent_macro::*;
-    pub use derive_more::{Debug, Display};
+    pub use derive_more::{Debug as DebugMore, Display as DisplayMore};
     pub use parse::prelude::*;
     pub use std::collections::*;
 }

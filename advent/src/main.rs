@@ -62,10 +62,7 @@ impl DayMetadata {
     }
 
     fn write(&self, day_path: &Path) -> Result<()> {
-        fs::write(
-            day_path.join(AOC_TOML),
-            toml::ser::to_string_pretty(self)?,
-        )?;
+        fs::write(day_path.join(AOC_TOML), toml::ser::to_string_pretty(self)?)?;
         Ok(())
     }
 }
@@ -138,6 +135,7 @@ edition = "2021"
 advent.workspace = true
 parse.workspace = true
 combine.workspace = true
+derive_more.workspace = true
 "#;
 
 const MAIN_RS: &str = r#"
