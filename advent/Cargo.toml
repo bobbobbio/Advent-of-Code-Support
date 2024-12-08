@@ -10,6 +10,7 @@ advent_macro = { path = "../advent_macro" }
 anyhow = "1.0.93"
 clap = { version = "4.5.20", features = ["derive"] }
 combine = "4.6.7"
+derive_more = { version = "1", features = ["debug", "display"] }
 homedir = "0.3.4"
 parse = { path = "../parse" }
 reqwest = { version = "0.12.9", features = ["blocking", "json"] }
