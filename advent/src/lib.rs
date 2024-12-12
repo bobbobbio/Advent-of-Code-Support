@@ -1258,3 +1258,79 @@ fn grid_parse_display() {
 fn grid_parse_error() {
     parse::parse_str::<Grid<Entry>>("AB\nBB\nAAC\n").unwrap_err();
 }
+
+/// Keeps track of the maximum value given to it
+pub struct Max<T>(Option<T>);
+
+impl<T> Max<T> {
+    /// Construct a new [`Max`], it starts empty.
+    pub fn new() -> Self {
+        Self(None)
+    }
+
+    /// Get the maximum value given to it, or `None` if empty.
+    pub fn get(self) -> Option<T> {
+        self.0
+    }
+}
+
+impl<T: PartialOrd> Max<T> {
+    /// If the given value is greater than the value stored, or nothing is stored, the stored value
+    /// is replaced with the given value.
+    pub fn add(&mut self, value: T) {
+        let new_value = Some(value);
+        if new_value > self.0 {
+            self.0 = new_value;
+        }
+    }
+}
+
+#[test]
+fn max_test() {
+    let mut m = Max::new();
+    m.add(21);
+    m.add(31);
+    m.add(10);
+
+    assert_eq!(m.get(), Some(31));
+    assert_eq!(Max::<i32>::new().get(), None);
+}
+
+/// Keeps track of the minimum value given to it
+pub struct Min<T>(Option<T>);
+
+impl<T> Min<T> {
+    /// Construct a new [`Min`], it starts empty.
+    pub fn new() -> Self {
+        Self(None)
+    }
+
+    /// Get the minimum value given to it, or `None` if empty.
+    pub fn get(self) -> Option<T> {
+        self.0
+    }
+}
+
+impl<T: PartialOrd> Min<T> {
+    /// If the given value is less than the value stored, or nothing is stored, the stored value
+    /// is replaced with the given value.
+    pub fn add(&mut self, value: T) {
+        let new_value = Some(value);
+        if self.0.is_none() {
+            self.0 = new_value;
+        } else if new_value < self.0 {
+            self.0 = new_value;
+        }
+    }
+}
+
+#[test]
+fn min_test() {
+    let mut m = Min::new();
+    m.add(21);
+    m.add(10);
+    m.add(31);
+
+    assert_eq!(m.get(), Some(10));
+    assert_eq!(Min::<i32>::new().get(), None);
+}
