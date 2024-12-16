@@ -1260,6 +1260,7 @@ fn grid_parse_error() {
 }
 
 /// Keeps track of the maximum value given to it
+#[derive(Default)]
 pub struct Max<T>(Option<T>);
 
 impl<T> Max<T> {
@@ -1297,6 +1298,7 @@ fn max_test() {
 }
 
 /// Keeps track of the minimum value given to it
+#[derive(Default)]
 pub struct Min<T>(Option<T>);
 
 impl<T> Min<T> {
@@ -1316,9 +1318,7 @@ impl<T: PartialOrd> Min<T> {
     /// is replaced with the given value.
     pub fn add(&mut self, value: T) {
         let new_value = Some(value);
-        if self.0.is_none() {
-            self.0 = new_value;
-        } else if new_value < self.0 {
+        if self.0.is_none() || new_value < self.0 {
             self.0 = new_value;
         }
     }
